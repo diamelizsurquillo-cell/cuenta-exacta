@@ -13,7 +13,7 @@ import { useExpenses } from './context/ExpenseContext';
 import { supabase } from './utils/supabaseClient';
 
 function App() {
-  const { state } = useExpenses();
+  const { state, dispatch } = useExpenses();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
