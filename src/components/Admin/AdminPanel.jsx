@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabaseClient';
-import { useExpenses } from '../../context/ExpenseContext';
-import { Search, Shield, CheckCircle, Clock } from 'lucide-react';
+import { useExpenses, calculatePlanInfo } from '../../context/ExpenseContext';
+import { Search, Shield, CheckCircle, Clock, MessageCircle } from 'lucide-react';
 
 export default function AdminPanel() {
   const { state } = useExpenses();
@@ -90,26 +90,46 @@ export default function AdminPanel() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-glass)', color: 'var(--text-muted)', fontSize: '14px' }}>
-                  <th style={{ padding: '12px 10px' }}>Usuario (Correo)</th>
-                  <th style={{ padding: '12px 10px' }}>Plan Actual</th>
+                  <th style={{ padding: '12px 10px' }}>Usuario</th>
+                  <th style={{ padding: '12px 10px' }}>WhatsApp</th>
+                  <th style={{ padding: '12px 10px' }}>Plan / Días Restantes</th>
                   <th style={{ padding: '12px 10px' }}>Acciones (Cambiar Plan)</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map(user => (
+                {filteredUsers.map(user => {
+                  const userPlanInfo = calculatePlanInfo(user);
+                  return (
                   <tr key={user.id} style={{ borderBottom: '1px solid var(--border-glass)' }}>
                     <td style={{ padding: '15px 10px', fontWeight: '500' }}>{user.email}</td>
                     <td style={{ padding: '15px 10px' }}>
-                      <span style={{ 
-                        padding: '4px 10px', 
-                        borderRadius: '20px', 
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        background: user.plan === 'anual' ? 'var(--success-bg)' : user.plan === 'mensual' ? 'var(--accent-bg)' : 'var(--bg-secondary)',
-                        color: user.plan === 'anual' ? 'var(--success)' : user.plan === 'mensual' ? 'var(--accent-light)' : 'var(--text-muted)',
-                      }}>
-                        {user.plan === 'anual' ? 'Anual' : user.plan === 'mensual' ? 'Mensual' : 'Gratis'}
-                      </span>
+                      {user.whatsapp ? (
+                        <a href={`https://wa.me/${user.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#25D366', textDecoration: 'none', fontWeight: 'bold' }}>
+                          <MessageCircle size={16} /> {user.whatsapp}
+                        </a>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Sin número</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '15px 10px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span style={{ 
+                          padding: '2px 8px', 
+                          borderRadius: '12px', 
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          width: 'fit-content',
+                          background: user.plan === 'anual' ? 'var(--success-bg)' : user.plan === 'mensual' ? 'var(--accent-bg)' : 'var(--bg-secondary)',
+                          color: user.plan === 'anual' ? 'var(--success)' : user.plan === 'mensual' ? 'var(--accent-light)' : 'var(--text-muted)',
+                        }}>
+                          {user.plan === 'anual' ? 'Anual' : user.plan === 'mensual' ? 'Mensual' : 'Gratis'}
+                        </span>
+                        {userPlanInfo && (
+                          <span style={{ fontSize: '12px', color: userPlanInfo.remaining <= 5 ? 'var(--danger)' : 'var(--text-muted)' }}>
+                            {userPlanInfo.remaining > 0 ? `${userPlanInfo.remaining} días` : 'Expirado'}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: '15px 10px' }}>
                       <div style={{ display: 'flex', gap: '8px' }}>
@@ -140,7 +160,7 @@ export default function AdminPanel() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
             {filteredUsers.length === 0 && (

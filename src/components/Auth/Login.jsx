@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useExpenses } from '../../context/ExpenseContext';
-import { LogIn, Mail, Lock, Chrome } from 'lucide-react';
+import { LogIn, Mail, Lock, Chrome, Phone } from 'lucide-react';
 import { supabase } from '../../utils/supabaseClient';
 
 export default function Login() {
   const { dispatch } = useExpenses();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -18,9 +19,20 @@ export default function Login() {
 
     try {
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (!whatsapp.trim()) {
+          setMessage({ text: 'Por favor, ingresa tu número de WhatsApp con código de país.', type: 'error' });
+          setLoading(false);
+          return;
+        }
+        const { data, error } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: {
+            data: { whatsapp: whatsapp.trim() }
+          }
+        });
         if (error) throw error;
-        setMessage({ text: '¡Registro exitoso! Revisa tu correo para confirmar tu cuenta.', type: 'success' });
+        setMessage({ text: '¡Registro exitoso!', type: 'success' });
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -94,6 +106,24 @@ export default function Login() {
               />
             </div>
           </div>
+
+          {isSignUp && (
+            <div className="form-group">
+              <label className="form-label">Número de WhatsApp (con código de país)</label>
+              <div style={{ position: 'relative' }}>
+                <Phone size={16} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--text-muted)' }} />
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="+51 987654321"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  style={{ paddingLeft: '40px' }}
+                  required={isSignUp}
+                />
+              </div>
+            </div>
+          )}
 
           {message.text && (
             <div style={{ 
