@@ -32,13 +32,14 @@ export default function AdminPanel() {
   };
 
   const handleUpdatePlan = async (userId, newPlan) => {
+    const now = new Date().toISOString();
     const { error } = await supabase
       .from('profiles')
-      .update({ plan: newPlan })
+      .update({ plan: newPlan, plan_started_at: now })
       .eq('id', userId);
 
     if (!error) {
-      setUsers(users.map(u => u.id === userId ? { ...u, plan: newPlan } : u));
+      setUsers(users.map(u => u.id === userId ? { ...u, plan: newPlan, plan_started_at: now } : u));
     } else {
       alert('Error al actualizar el plan');
     }

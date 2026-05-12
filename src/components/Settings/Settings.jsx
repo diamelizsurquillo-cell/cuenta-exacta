@@ -61,33 +61,7 @@ export default function Settings() {
     return expenses.some(exp => exp.category === catId);
   };
 
-  const getPlanInfo = () => {
-    if (!state.userProfile) return null;
-    const profile = state.userProfile;
-    const createdDate = new Date(profile.created_at);
-    const now = new Date();
-    const diffTime = Math.abs(now - createdDate);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    let duration = 30;
-    let planName = 'Gratis';
-    let planColor = 'var(--text-muted)';
-    
-    if (profile.plan === 'mensual') {
-      duration = 30;
-      planName = 'Mensual Premium';
-      planColor = 'var(--accent)';
-    } else if (profile.plan === 'anual') {
-      duration = 365;
-      planName = 'Anual Premium';
-      planColor = 'var(--success)';
-    }
-    
-    const remaining = duration - diffDays;
-    return { planName, remaining, duration, planColor, email: profile.email };
-  };
-
-  const planInfo = getPlanInfo();
+  const planInfo = state.planInfo;
 
   return (
     <div className="fade-in-up" style={{ maxWidth: '800px', margin: '0 auto' }}>

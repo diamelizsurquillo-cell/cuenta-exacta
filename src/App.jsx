@@ -55,8 +55,16 @@ function App() {
     return <Login />;
   }
 
+  const isAdmin = state.user?.email === 'jefferson_15_6@hotmail.com';
+  const isExpired = state.planInfo && state.planInfo.remaining <= 0;
+
+  let activeView = state.currentView;
+  if (isExpired && !isAdmin && activeView !== 'settings' && activeView !== 'subscription' && activeView !== 'admin') {
+    activeView = 'subscription';
+  }
+
   const renderView = () => {
-    switch (state.currentView) {
+    switch (activeView) {
       case 'dashboard': return <Dashboard />;
       case 'add': return <ExpenseForm />;
       case 'expenses': return <ExpenseList />;
@@ -70,27 +78,25 @@ function App() {
   };
 
   const renderFreeTrialBanner = () => {
-    if (!state.userProfile || state.userProfile.plan !== 'free') return null;
+    if (!state.planInfo || isAdmin) return null;
 
-    const createdDate = new Date(state.userProfile.created_at);
-    const now = new Date();
-    const diffTime = Math.abs(now - createdDate);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const remaining = 30 - diffDays;
-
-    if (remaining <= 0) {
+    if (isExpired) {
        return (
          <div style={{ background: 'var(--danger)', color: 'white', padding: '10px', textAlign: 'center', fontSize: '14px', fontWeight: 'bold', zIndex: 100 }}>
-           Tu mes de prueba ha finalizado. Por favor, adquiere un plan para seguir usando la aplicación.
+           Tu plan ha expirado. Por favor, adquiere o renueva tu plan para seguir usando la aplicación.
          </div>
        );
     }
 
-    return (
-      <div style={{ background: 'linear-gradient(to right, var(--accent), var(--violet))', color: 'white', padding: '10px', textAlign: 'center', fontSize: '14px', fontWeight: 'bold', zIndex: 100 }}>
-        Cuenta gratis por 01 mes. Te quedan {remaining} días de prueba.
-      </div>
-    );
+    if (state.userProfile?.plan === 'free') {
+      return (
+        <div style={{ background: 'linear-gradient(to right, var(--accent), var(--violet))', color: 'white', padding: '10px', textAlign: 'center', fontSize: '14px', fontWeight: 'bold', zIndex: 100 }}>
+          Cuenta gratis por 01 mes. Te quedan {state.planInfo.remaining} días de prueba.
+        </div>
+      );
+    }
+    
+    return null;
   };
 
   return (
@@ -108,7 +114,7 @@ function App() {
       <main className="main-content" style={{ display: 'flex', flexDirection: 'column' }}>
         {renderFreeTrialBanner()}
         <Header 
-          currentView={state.currentView} 
+          currentView={activeView} 
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         />
         <div className="page-content">

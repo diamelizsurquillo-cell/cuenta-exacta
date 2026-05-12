@@ -6,6 +6,30 @@ import { supabase } from '../utils/supabaseClient';
 
 const ExpenseContext = createContext();
 
+const calculatePlanInfo = (profile) => {
+  if (!profile) return null;
+  const startedDate = new Date(profile.plan_started_at || profile.created_at);
+  const now = new Date();
+  const diffDays = Math.floor(Math.abs(now - startedDate) / (1000 * 60 * 60 * 24));
+  
+  let duration = 30;
+  let planName = 'Gratis';
+  let planColor = 'var(--text-muted)';
+  
+  if (profile.plan === 'mensual') {
+    duration = 30;
+    planName = 'Mensual Premium';
+    planColor = 'var(--accent)';
+  } else if (profile.plan === 'anual') {
+    duration = 365;
+    planName = 'Anual Premium';
+    planColor = 'var(--success)';
+  }
+  
+  const remaining = duration - diffDays;
+  return { planName, remaining, duration, planColor, email: profile.email };
+};
+
 function expenseReducer(state, action) {
   switch (action.type) {
     case 'ADD_EXPENSE':
@@ -37,7 +61,7 @@ function expenseReducer(state, action) {
     case 'SET_USER':
       return { ...state, user: action.payload };
     case 'SET_USER_PROFILE':
-      return { ...state, userProfile: action.payload };
+      return { ...state, userProfile: action.payload, planInfo: calculatePlanInfo(action.payload) };
     case 'ADD_CATEGORY':
       const updatedCats = [...state.categories, action.payload];
       localStorage.setItem('categories', JSON.stringify(updatedCats));
@@ -58,6 +82,7 @@ const initialState = {
   isAuthenticated: localStorage.getItem('auth') === 'true',
   user: null,
   userProfile: null,
+  planInfo: null,
   theme: localStorage.getItem('theme') || 'light',
   categories: JSON.parse(localStorage.getItem('categories')) || DEFAULT_CATEGORIES,
   filters: {
