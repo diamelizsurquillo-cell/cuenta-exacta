@@ -36,6 +36,8 @@ function expenseReducer(state, action) {
       return { ...state, theme: newTheme };
     case 'SET_USER':
       return { ...state, user: action.payload };
+    case 'SET_USER_PROFILE':
+      return { ...state, userProfile: action.payload };
     case 'ADD_CATEGORY':
       const updatedCats = [...state.categories, action.payload];
       localStorage.setItem('categories', JSON.stringify(updatedCats));
@@ -55,6 +57,7 @@ const initialState = {
   editingExpense: null,
   isAuthenticated: localStorage.getItem('auth') === 'true',
   user: null,
+  userProfile: null,
   theme: localStorage.getItem('theme') || 'light',
   categories: JSON.parse(localStorage.getItem('categories')) || DEFAULT_CATEGORIES,
   filters: {

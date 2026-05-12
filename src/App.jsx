@@ -22,10 +22,18 @@ function App() {
   }, [state.theme]);
 
   useEffect(() => {
+    const fetchProfile = async (userId) => {
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (data) {
+        dispatch({ type: 'SET_USER_PROFILE', payload: data });
+      }
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         dispatch({ type: 'SET_USER', payload: session.user });
         dispatch({ type: 'LOGIN' });
+        fetchProfile(session.user.id);
       }
     });
 
@@ -33,8 +41,10 @@ function App() {
       if (session) {
         dispatch({ type: 'SET_USER', payload: session.user });
         dispatch({ type: 'LOGIN' });
+        fetchProfile(session.user.id);
       } else {
         dispatch({ type: 'LOGOUT' });
+        dispatch({ type: 'SET_USER_PROFILE', payload: null });
       }
     });
 
@@ -59,6 +69,30 @@ function App() {
     }
   };
 
+  const renderFreeTrialBanner = () => {
+    if (!state.userProfile || state.userProfile.plan !== 'free') return null;
+
+    const createdDate = new Date(state.userProfile.created_at);
+    const now = new Date();
+    const diffTime = Math.abs(now - createdDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const remaining = 30 - diffDays;
+
+    if (remaining <= 0) {
+       return (
+         <div style={{ background: 'var(--danger)', color: 'white', padding: '10px', textAlign: 'center', fontSize: '14px', fontWeight: 'bold', zIndex: 100 }}>
+           Tu mes de prueba ha finalizado. Por favor, adquiere un plan para seguir usando la aplicación.
+         </div>
+       );
+    }
+
+    return (
+      <div style={{ background: 'linear-gradient(to right, var(--accent), var(--violet))', color: 'white', padding: '10px', textAlign: 'center', fontSize: '14px', fontWeight: 'bold', zIndex: 100 }}>
+        Cuenta gratis por 01 mes. Te quedan {remaining} días de prueba.
+      </div>
+    );
+  };
+
   return (
     <div className="app-layout">
       {/* Mobile overlay */}
@@ -71,7 +105,8 @@ function App() {
       
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <main className="main-content">
+      <main className="main-content" style={{ display: 'flex', flexDirection: 'column' }}>
+        {renderFreeTrialBanner()}
         <Header 
           currentView={state.currentView} 
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
