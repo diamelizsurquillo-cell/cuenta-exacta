@@ -55,7 +55,7 @@ const initialState = {
   editingExpense: null,
   isAuthenticated: localStorage.getItem('auth') === 'true',
   user: null,
-  theme: localStorage.getItem('theme') || 'dark',
+  theme: localStorage.getItem('theme') || 'light',
   categories: JSON.parse(localStorage.getItem('categories')) || DEFAULT_CATEGORIES,
   filters: {
     category: 'all',
