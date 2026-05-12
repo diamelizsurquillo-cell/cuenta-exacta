@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useExpenses } from '../../context/ExpenseContext';
-import { Trash2, Plus, Shield, Tag as TagIcon, Check, AlertCircle } from 'lucide-react';
+import { Trash2, Plus, Shield, Tag as TagIcon, Check, AlertCircle, User } from 'lucide-react';
 import { generateId } from '../../utils/formatters';
 
 export default function Settings() {
@@ -61,9 +61,73 @@ export default function Settings() {
     return expenses.some(exp => exp.category === catId);
   };
 
+  const getPlanInfo = () => {
+    if (!state.userProfile) return null;
+    const profile = state.userProfile;
+    const createdDate = new Date(profile.created_at);
+    const now = new Date();
+    const diffTime = Math.abs(now - createdDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    let duration = 30;
+    let planName = 'Gratis';
+    let planColor = 'var(--text-muted)';
+    
+    if (profile.plan === 'mensual') {
+      duration = 30;
+      planName = 'Mensual Premium';
+      planColor = 'var(--accent)';
+    } else if (profile.plan === 'anual') {
+      duration = 365;
+      planName = 'Anual Premium';
+      planColor = 'var(--success)';
+    }
+    
+    const remaining = duration - diffDays;
+    return { planName, remaining, duration, planColor, email: profile.email };
+  };
+
+  const planInfo = getPlanInfo();
+
   return (
     <div className="fade-in-up" style={{ maxWidth: '800px', margin: '0 auto' }}>
       
+      {/* SECTION 0: Account Info */}
+      {planInfo && (
+        <div className="glass-card" style={{ marginBottom: '30px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+            <User size={22} style={{ color: 'var(--accent)' }} />
+            <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Información de la Cuenta</h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-glass)', paddingBottom: '10px' }}>
+              <strong style={{ color: 'var(--text-muted)' }}>Correo Electrónico:</strong> 
+              <span style={{ fontWeight: '500' }}>{planInfo.email}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-glass)', paddingBottom: '10px' }}>
+              <strong style={{ color: 'var(--text-muted)' }}>Tipo de Plan:</strong> 
+              <span style={{ color: planInfo.planColor, fontWeight: 'bold' }}>{planInfo.planName}</span>
+            </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <strong style={{ color: 'var(--text-muted)' }}>Tiempo Restante:</strong>
+                <span style={{ color: planInfo.remaining <= 5 ? 'var(--danger)' : 'var(--text-primary)', fontWeight: '600' }}>
+                  {planInfo.remaining > 0 ? `${planInfo.remaining} días de ${planInfo.duration}` : 'Plan expirado'}
+                </span>
+              </div>
+              <div style={{ marginTop: '10px', height: '10px', background: 'var(--border-glass)', borderRadius: '5px', overflow: 'hidden' }}>
+                 <div style={{ 
+                   height: '100%', 
+                   width: `${Math.max(0, Math.min(100, (planInfo.remaining / planInfo.duration) * 100))}%`, 
+                   background: planInfo.remaining <= 5 ? 'var(--danger)' : planInfo.planColor,
+                   transition: 'width 0.5s ease'
+                 }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* SECTION 1: Password Change */}
       <div className="glass-card" style={{ marginBottom: '30px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
