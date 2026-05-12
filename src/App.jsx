@@ -9,6 +9,7 @@ import Login from './components/Auth/Login';
 import Pricing from './components/Subscription/Pricing';
 import Settings from './components/Settings/Settings';
 import Reminders from './components/Reminders/Reminders';
+import AdminPanel from './components/Admin/AdminPanel';
 import { useExpenses } from './context/ExpenseContext';
 import { supabase } from './utils/supabaseClient';
 
@@ -53,6 +54,7 @@ function App() {
       case 'reminders': return <Reminders />;
       case 'subscription': return <Pricing />;
       case 'settings': return <Settings />;
+      case 'admin': return <AdminPanel />;
       default: return <Dashboard />;
     }
   };

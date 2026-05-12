@@ -1,4 +1,4 @@
-import { LayoutDashboard, PlusCircle, List, FileText, Settings, LogOut, CreditCard, Bell } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, List, FileText, Settings, LogOut, CreditCard, Bell, Shield } from 'lucide-react';
 import { useExpenses } from '../../context/ExpenseContext';
 import { supabase } from '../../utils/supabaseClient';
 
@@ -14,6 +14,7 @@ const navItems = [
 
 export default function Sidebar({ isOpen, onClose }) {
   const { state, dispatch } = useExpenses();
+  const isAdmin = state.user?.email === 'jefferson_15_6@hotmail.com';
 
   const handleNavClick = (id) => {
     dispatch({ type: 'SET_VIEW', payload: id });
@@ -47,6 +48,18 @@ export default function Sidebar({ isOpen, onClose }) {
             {item.label}
           </button>
         ))}
+        
+        {isAdmin && (
+          <button
+            id="nav-admin"
+            className={`nav-item ${state.currentView === 'admin' ? 'active' : ''}`}
+            onClick={() => handleNavClick('admin')}
+            style={{ color: 'var(--accent-light)' }}
+          >
+            <Shield className="nav-icon" style={{ color: 'var(--accent-light)' }} />
+            Accesos (Admin)
+          </button>
+        )}
       </nav>
 
       <div className="sidebar-footer">

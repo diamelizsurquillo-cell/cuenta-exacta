@@ -9,6 +9,7 @@ const viewTitles = {
   subscription: { title: 'Planes de Suscripción', sub: 'Elige el mejor plan para ti' },
   settings: { title: 'Configuración', sub: 'Gestiona tu cuenta y categorías' },
   reminders: { title: 'Recordatorios', sub: 'Control de deudas y pagos fijos' },
+  admin: { title: 'Accesos', sub: 'Gestión de planes de suscripción de usuarios' },
 };
 
 export default function Header({ currentView, onMenuToggle }) {
