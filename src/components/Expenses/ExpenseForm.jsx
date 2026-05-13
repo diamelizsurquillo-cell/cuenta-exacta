@@ -10,7 +10,7 @@ export default function ExpenseForm() {
   const editing = state.editingExpense;
 
   const [form, setForm] = useState({
-    amount: '', category: '', description: '', date: getTodayStr(), payment: 'efectivo'
+    amount: '', category: '', description: '', date: getTodayStr(), payment: 'efectivo', tipo_gasto: 'variable'
   });
 
   useEffect(() => {
@@ -21,6 +21,7 @@ export default function ExpenseForm() {
         description: editing.description,
         date: editing.date,
         payment: editing.payment || 'efectivo',
+        tipo_gasto: editing.tipo_gasto || 'variable'
       });
     }
   }, [editing]);
@@ -65,13 +66,13 @@ export default function ExpenseForm() {
       }
     }
 
-    setForm({ amount: '', category: '', description: '', date: getTodayStr(), payment: 'efectivo' });
+    setForm({ amount: '', category: '', description: '', date: getTodayStr(), payment: 'efectivo', tipo_gasto: 'variable' });
     if (!editing) dispatch({ type: 'SET_VIEW', payload: 'dashboard' });
   };
 
   const handleCancel = () => {
     dispatch({ type: 'SET_EDITING', payload: null });
-    setForm({ amount: '', category: '', description: '', date: getTodayStr(), payment: 'efectivo' });
+    setForm({ amount: '', category: '', description: '', date: getTodayStr(), payment: 'efectivo', tipo_gasto: 'variable' });
   };
 
   return (
@@ -81,6 +82,31 @@ export default function ExpenseForm() {
           {editing ? '✏️ Editar Gasto' : '💸 Nuevo Gasto'}
         </h3>
         <form onSubmit={handleSubmit}>
+          {/* Tipo Gasto Selection */}
+          <div className="form-group full" style={{ marginBottom: 20 }}>
+            <label className="form-label">Tipo de Gasto *</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div 
+                className={`category-option ${form.tipo_gasto === 'fijo' ? 'selected' : ''}`}
+                onClick={() => setForm(f => ({ ...f, tipo_gasto: 'fijo' }))}
+                style={{ justifyContent: 'center', borderColor: form.tipo_gasto === 'fijo' ? 'var(--accent)' : 'var(--border-glass)', background: form.tipo_gasto === 'fijo' ? 'var(--accent-bg)' : 'transparent' }}
+              >
+                <span style={{ fontSize: '20px' }}>🏠</span>
+                <span style={{ fontWeight: '600' }}>Gasto Fijo</span>
+              </div>
+              <div 
+                className={`category-option ${form.tipo_gasto === 'variable' ? 'selected' : ''}`}
+                onClick={() => setForm(f => ({ ...f, tipo_gasto: 'variable' }))}
+                style={{ justifyContent: 'center', borderColor: form.tipo_gasto === 'variable' ? 'var(--violet)' : 'var(--border-glass)', background: form.tipo_gasto === 'variable' ? 'rgba(139, 92, 246, 0.1)' : 'transparent' }}
+              >
+                <span style={{ fontSize: '20px' }}>🛒</span>
+                <span style={{ fontWeight: '600' }}>Gasto Variable</span>
+              </div>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px', textAlign: 'center' }}>
+              {form.tipo_gasto === 'fijo' ? 'Recibos, alquiler, suscripciones, etc.' : 'Comidas, salidas, antojos, ropa, etc.'}
+            </p>
+          </div>
           {/* Category selection */}
           <div className="form-group full" style={{ marginBottom: 18 }}>
             <label className="form-label">Categoría *</label>

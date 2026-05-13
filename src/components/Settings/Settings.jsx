@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useExpenses } from '../../context/ExpenseContext';
-import { Trash2, Plus, Shield, Tag as TagIcon, Check, AlertCircle, User } from 'lucide-react';
+import { Trash2, Plus, Shield, Tag as TagIcon, Check, AlertCircle, User, Wallet } from 'lucide-react';
 import { generateId } from '../../utils/formatters';
+import { supabase } from '../../utils/supabaseClient';
 
 export default function Settings() {
   const { state, dispatch } = useExpenses();
@@ -15,6 +16,18 @@ export default function Settings() {
   });
   const [passMessage, setPassMessage] = useState({ text: '', type: '' });
 
+  // Income state
+  const [income, setIncome] = useState('');
+  const [incomeLoading, setIncomeLoading] = useState(false);
+  const [incomeMessage, setIncomeMessage] = useState({ text: '', type: '' });
+
+  // Init income
+  useEffect(() => {
+    if (state.userProfile?.ingreso_mensual !== undefined) {
+      setIncome(String(state.userProfile.ingreso_mensual));
+    }
+  }, [state.userProfile]);
+
   // New Category state
   const [newCat, setNewCat] = useState({ name: '', icon: '📦', color: '#6366f1' });
 
@@ -26,6 +39,27 @@ export default function Settings() {
     }
     setPassMessage({ text: '¡Contraseña cambiada con éxito! (Simulado)', type: 'success' });
     setPasswords({ current: '', new: '', confirm: '' });
+  };
+
+  const handleSaveIncome = async (e) => {
+    e.preventDefault();
+    if (!state.userProfile) return;
+    setIncomeLoading(true);
+    setIncomeMessage({ text: '', type: '' });
+
+    const newIncome = parseFloat(income) || 0;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ ingreso_mensual: newIncome })
+      .eq('id', state.userProfile.id);
+
+    if (!error) {
+      dispatch({ type: 'SET_USER_PROFILE', payload: { ...state.userProfile, ingreso_mensual: newIncome } });
+      setIncomeMessage({ text: 'Ingreso mensual actualizado con éxito.', type: 'success' });
+    } else {
+      setIncomeMessage({ text: 'Error al actualizar el ingreso.', type: 'error' });
+    }
+    setIncomeLoading(false);
   };
 
   const handleAddCategory = (e) => {
@@ -101,6 +135,47 @@ export default function Settings() {
           </div>
         </div>
       )}
+
+      {/* SECTION: Monthly Income */}
+      <div className="glass-card" style={{ marginBottom: '30px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+          <Wallet size={22} style={{ color: 'var(--success)' }} />
+          <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Mis Ingresos</h3>
+        </div>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '15px' }}>
+          Configura tu ingreso mensual promedio. Esto nos ayudará a calcular tu salud financiera y mostrarte qué porcentaje de tus ingresos se va en gastos fijos o variables.
+        </p>
+        <form onSubmit={handleSaveIncome} style={{ display: 'flex', gap: '15px', alignItems: 'flex-end' }}>
+          <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
+            <label className="form-label">Ingreso Mensual (S/)</label>
+            <input 
+              type="number" 
+              step="0.01"
+              min="0"
+              className="form-input" 
+              placeholder="Ej: 2500.00"
+              value={income}
+              onChange={(e) => setIncome(e.target.value)}
+              required 
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" disabled={incomeLoading}>
+            {incomeLoading ? 'Guardando...' : 'Guardar Ingreso'}
+          </button>
+        </form>
+        {incomeMessage.text && (
+          <div style={{ 
+            marginTop: '15px',
+            fontSize: '13px', 
+            color: incomeMessage.type === 'success' ? 'var(--success)' : 'var(--danger)',
+            background: incomeMessage.type === 'success' ? 'var(--success-bg)' : 'var(--danger-bg)',
+            padding: '10px',
+            borderRadius: '6px'
+          }}>
+            {incomeMessage.text}
+          </div>
+        )}
+      </div>
 
       {/* SECTION 1: Password Change */}
       <div className="glass-card" style={{ marginBottom: '30px' }}>
