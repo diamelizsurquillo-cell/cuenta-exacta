@@ -6,7 +6,7 @@ import { supabase } from '../utils/supabaseClient';
 
 const ExpenseContext = createContext();
 
-const calculatePlanInfo = (profile) => {
+export const calculatePlanInfo = (profile) => {
   if (!profile) return null;
   const startedDate = new Date(profile.plan_started_at || profile.created_at);
   const now = new Date();
