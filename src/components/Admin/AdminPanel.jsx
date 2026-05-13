@@ -8,6 +8,7 @@ export default function AdminPanel() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, userId: null, newPlan: null, password: '', error: '', loading: false });
 
   // Verificación de seguridad en el frontend
   const isAdmin = state.user?.email === 'jefferson_15_6@hotmail.com';
@@ -31,17 +32,36 @@ export default function AdminPanel() {
     setLoading(false);
   };
 
-  const handleUpdatePlan = async (userId, newPlan) => {
+  const handleUpdatePlan = (userId, newPlan) => {
+    setConfirmModal({ isOpen: true, userId, newPlan, password: '', error: '', loading: false });
+  };
+
+  const handleConfirmUpdate = async (e) => {
+    e.preventDefault();
+    setConfirmModal(prev => ({ ...prev, loading: true, error: '' }));
+    
+    const adminEmail = state.user.email;
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: adminEmail,
+      password: confirmModal.password
+    });
+
+    if (authError) {
+      setConfirmModal(prev => ({ ...prev, loading: false, error: 'Contraseña incorrecta. Inténtalo de nuevo.' }));
+      return;
+    }
+
     const now = new Date().toISOString();
     const { error } = await supabase
       .from('profiles')
-      .update({ plan: newPlan, plan_started_at: now })
-      .eq('id', userId);
+      .update({ plan: confirmModal.newPlan, plan_started_at: now })
+      .eq('id', confirmModal.userId);
 
     if (!error) {
-      setUsers(users.map(u => u.id === userId ? { ...u, plan: newPlan, plan_started_at: now } : u));
+      setUsers(users.map(u => u.id === confirmModal.userId ? { ...u, plan: confirmModal.newPlan, plan_started_at: now } : u));
+      setConfirmModal({ isOpen: false, userId: null, newPlan: null, password: '', error: '', loading: false });
     } else {
-      alert('Error al actualizar el plan');
+      setConfirmModal(prev => ({ ...prev, loading: false, error: 'Error al actualizar el plan en la base de datos.' }));
     }
   };
 
@@ -169,6 +189,46 @@ export default function AdminPanel() {
           </div>
         )}
       </div>
+
+      {confirmModal.isOpen && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+          <div className="glass-card fade-in-up" style={{ width: '90%', maxWidth: '400px', background: 'var(--bg-primary)' }}>
+            <h3 style={{ marginBottom: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Shield size={20} style={{ color: 'var(--accent)' }}/>
+              Confirmar Autorización
+            </h3>
+            <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Para otorgar el plan <strong style={{ color: 'var(--text-primary)' }}>{confirmModal.newPlan === 'anual' ? 'Anual' : confirmModal.newPlan === 'mensual' ? 'Mensual' : 'Gratis'}</strong>, por favor verifica tu identidad ingresando tu contraseña de administrador.
+            </p>
+            <form onSubmit={handleConfirmUpdate}>
+              <input 
+                type="password" 
+                className="form-input" 
+                placeholder="Tu contraseña..."
+                value={confirmModal.password}
+                onChange={(e) => setConfirmModal({...confirmModal, password: e.target.value})}
+                style={{ marginBottom: '15px' }}
+                autoFocus
+                required 
+              />
+              {confirmModal.error && (
+                <div style={{ color: 'var(--danger)', fontSize: '13px', marginBottom: '15px', background: 'var(--danger-bg)', padding: '10px', borderRadius: '6px' }}>
+                  {confirmModal.error}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => setConfirmModal({ isOpen: false, userId: null, newPlan: null, password: '', error: '', loading: false })}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={confirmModal.loading}>
+                  {confirmModal.loading ? 'Verificando...' : 'Confirmar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
