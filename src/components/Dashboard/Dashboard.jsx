@@ -343,7 +343,18 @@ export default function Dashboard() {
                 return (
                   <tr key={e.id}>
                     <td style={{ fontSize: 13 }}>{new Date(e.date + 'T00:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}</td>
-                    <td><span className="cat-badge" style={{ borderLeft: `3px solid ${cat.color}` }}>{cat.icon} {cat.name}</span></td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                        <span className="cat-badge" style={{ borderLeft: `3px solid ${cat.color}` }}>
+                          {cat.icon} {cat.name}
+                        </span>
+                        {e.tipo_gasto === 'fijo' ? (
+                          <span style={{ fontSize: '10px', background: 'var(--accent-bg)', color: 'var(--accent)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px' }}>🏠 Fijo</span>
+                        ) : (
+                          <span style={{ fontSize: '10px', background: 'rgba(139, 92, 246, 0.1)', color: 'var(--violet)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px' }}>🛒 Variable</span>
+                        )}
+                      </div>
+                    </td>
                     <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{e.description || '—'}</td>
                     <td className="amount-cell" style={{ textAlign: 'right', color: 'var(--danger)' }}>-{formatCurrency(e.amount)}</td>
                   </tr>
