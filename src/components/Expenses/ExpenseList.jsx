@@ -158,9 +158,16 @@ export default function ExpenseList() {
                   <tr key={expense.id}>
                     <td>{formatDate(expense.date)}</td>
                     <td>
-                      <span className="cat-badge" style={{ borderLeft: `3px solid ${cat.color}` }}>
-                        {cat.icon} {cat.name}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                        <span className="cat-badge" style={{ borderLeft: `3px solid ${cat.color}` }}>
+                          {cat.icon} {cat.name}
+                        </span>
+                        {expense.tipo_gasto === 'fijo' ? (
+                          <span style={{ fontSize: '10px', background: 'var(--accent-bg)', color: 'var(--accent)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px' }}>🏠 Fijo</span>
+                        ) : (
+                          <span style={{ fontSize: '10px', background: 'rgba(139, 92, 246, 0.1)', color: 'var(--violet)', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px' }}>🛒 Variable</span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ color: 'var(--text-secondary)' }}>{expense.description || '—'}</td>
                     <td style={{ fontSize: 13 }}>{pay.icon} {pay.name}</td>
