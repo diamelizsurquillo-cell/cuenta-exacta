@@ -1,7 +1,7 @@
 import { useExpenses } from '../../context/ExpenseContext';
 import { getCategoryById, CATEGORIES } from '../../utils/categories';
 import { formatCurrency, getMonthName } from '../../utils/formatters';
-import { TrendingDown, TrendingUp, DollarSign, Calendar, Tag, ArrowDownRight } from 'lucide-react';
+import { TrendingDown, TrendingUp, DollarSign, Calendar, Tag, ArrowDownRight, Activity, Wallet } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend, Area, AreaChart
@@ -31,6 +31,13 @@ export default function Dashboard() {
   const totalCurrent = monthExpenses.reduce((s, e) => s + e.amount, 0);
   const totalPrev = prevMonthExpenses.reduce((s, e) => s + e.amount, 0);
   const changePercent = totalPrev > 0 ? ((totalCurrent - totalPrev) / totalPrev * 100) : 0;
+
+  const totalFijo = monthExpenses.filter(e => e.tipo_gasto === 'fijo').reduce((s, e) => s + e.amount, 0);
+  const totalVariable = monthExpenses.filter(e => e.tipo_gasto !== 'fijo').reduce((s, e) => s + e.amount, 0);
+  const ingreso = state.userProfile?.ingreso_mensual || 0;
+  const porcentajeFijo = ingreso > 0 ? (totalFijo / ingreso) * 100 : 0;
+  const porcentajeVariable = ingreso > 0 ? (totalVariable / ingreso) * 100 : 0;
+  const porcentajeTotal = ingreso > 0 ? (totalCurrent / ingreso) * 100 : 0;
 
   const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
   const currentDay = (curYear === now.getFullYear() && curMonth === now.getMonth()) ? now.getDate() : daysInMonth;
@@ -110,6 +117,64 @@ export default function Dashboard() {
           {years.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
+
+      {/* Financial Health Section */}
+      {ingreso > 0 ? (
+        <div className="glass-card fade-in-up" style={{ marginBottom: 20 }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Activity size={20} style={{ color: 'var(--success)' }} />
+            Salud Financiera
+          </h3>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Ingreso Mensual</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--success)' }}>{formatCurrency(ingreso)}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Gasto Total ({porcentajeTotal.toFixed(1)}%)</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: porcentajeTotal > 100 ? 'var(--danger)' : 'var(--text-primary)' }}>{formatCurrency(totalCurrent)}</div>
+            </div>
+          </div>
+
+          <div style={{ height: '24px', background: 'var(--bg-secondary)', borderRadius: '12px', display: 'flex', overflow: 'hidden', marginBottom: '15px' }}>
+            <div style={{ width: `${Math.min(porcentajeFijo, 100)}%`, background: 'var(--accent)', transition: 'width 0.5s' }} title={`Fijo: ${porcentajeFijo.toFixed(1)}%`} />
+            <div style={{ width: `${Math.min(porcentajeVariable, 100 - Math.min(porcentajeFijo, 100))}%`, background: 'var(--violet)', transition: 'width 0.5s' }} title={`Variable: ${porcentajeVariable.toFixed(1)}%`} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div style={{ padding: '12px', background: 'var(--accent-bg)', borderRadius: '8px', borderLeft: '4px solid var(--accent)' }}>
+              <div style={{ fontSize: '12px', color: 'var(--accent)' }}>Gastos Fijos ({porcentajeFijo.toFixed(1)}%)</div>
+              <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{formatCurrency(totalFijo)}</div>
+            </div>
+            <div style={{ padding: '12px', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '8px', borderLeft: '4px solid var(--violet)' }}>
+              <div style={{ fontSize: '12px', color: 'var(--violet)' }}>Gastos Variables ({porcentajeVariable.toFixed(1)}%)</div>
+              <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{formatCurrency(totalVariable)}</div>
+            </div>
+          </div>
+
+          {porcentajeVariable > 30 && (
+            <div style={{ marginTop: '15px', padding: '12px', background: 'var(--danger-bg)', color: 'var(--danger)', borderRadius: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ArrowDownRight size={16} style={{ flexShrink: 0 }} />
+              Tus gastos variables superan el 30% de tus ingresos. ¡Intenta reducirlos para mejorar tu capacidad de ahorro!
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="glass-card fade-in-up" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 20px', borderLeft: '4px solid var(--accent)' }}>
+          <div>
+            <h4 style={{ margin: 0, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+              <Wallet size={18} style={{ color: 'var(--accent)' }}/> Configura tus Ingresos
+            </h4>
+            <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
+              Agrega tu ingreso mensual para desbloquear el análisis de salud financiera.
+            </p>
+          </div>
+          <button onClick={() => dispatch({ type: 'SET_VIEW', payload: 'settings' })} className="btn btn-primary btn-sm" style={{ padding: '8px 16px' }}>
+            Configurar
+          </button>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="kpi-grid">
